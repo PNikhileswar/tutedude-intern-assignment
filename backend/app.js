@@ -11,7 +11,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     methods: ["GET", "POST"]
   },
   pingTimeout: 30000, 
@@ -40,9 +40,9 @@ app.get('/',(req,res)=>{
     res.send('Hello World');
 });
 
-mongoose.connect('mongodb://localhost:27017/VideoProgress',{
-    useNewUrlParser:true,
-    useUnifiedTopology:true
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/VideoProgress', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
 }).then(()=>{console.log('MongoDB Connected ...')})
 .catch(e=> console.log(e));
 

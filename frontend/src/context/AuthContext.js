@@ -2,6 +2,8 @@ import React, { createContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { closeSocket } from '../services/socketService';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -18,7 +20,7 @@ export const AuthProvider = ({ children }) => {
   const validateToken = useCallback(async (token) => {
     try {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      const response = await axios.get('http://localhost:5000/api/auth/validate');
+      const response = await axios.get(`${API_BASE_URL}/api/auth/validate`);
       setCurrentUser(response.data.user);
     } catch (error) {
       console.error("Token validation error:", error);
@@ -40,7 +42,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, {
         email,
         password
       });
@@ -56,7 +58,7 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (username, email, password) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/signup', {
+      const response = await axios.post(`${API_BASE_URL}/api/auth/signup`, {
         username,
         email,
         password
