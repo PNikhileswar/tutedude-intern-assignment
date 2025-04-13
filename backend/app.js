@@ -11,7 +11,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: process.env.FRONTEND_URL,
     methods: ["GET", "POST"]
   },
   pingTimeout: 30000, 
@@ -26,6 +26,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 app.use(cors());
 app.use(bodyParser.json());
 
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
+
 const progressRoutes = require('./routers/progress.routers');
 const authRoutes = require('./routers/auth.routers');
 const playlistRoutes = require('./routers/playlist.routers');
@@ -38,6 +43,15 @@ app.use('/api/videos', videoRoutes);
 
 app.get('/',(req,res)=>{    
     res.send('Hello World');
+});
+
+// Add this at the end of your routes, before mongoose.connect
+app.use('*', (req, res) => {
+  res.status(404).json({ 
+    error: 'Not Found',
+    message: `Route ${req.originalUrl} not found`,
+    availableRoutes: ['/api/progress', '/api/auth', '/api/playlists', '/api/videos']
+  });
 });
 
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/VideoProgress', {
