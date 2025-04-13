@@ -159,6 +159,34 @@ app.use('/api/auth', authRoutes);
 app.use('/api/playlists', playlistRoutes);
 app.use('/api/videos', videoRoutes);
 
+// Add this route to verify progress collection and get diagnostic info
+app.get('/api/debug/progress', async (req, res) => {
+  try {
+    // Test database connection
+    const dbState = mongoose.connection.readyState;
+    
+    // Check if collection exists and get sample count
+    const progressCount = await Progress.countDocuments();
+    
+    // Get last 5 progress records
+    const recentProgress = await Progress.find().limit(5).sort({_id: -1});
+    
+    res.json({
+      serverTime: new Date().toISOString(),
+      dbConnected: dbState === 1,
+      progressCount,
+      recentProgress: recentProgress.map(p => ({
+        userId: p.userId,
+        videoId: p.videoId,
+        percent: p.percent,
+        timestamp: p._id.getTimestamp()
+      }))
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/',(req,res)=>{    
     res.send('Hello World');
 });

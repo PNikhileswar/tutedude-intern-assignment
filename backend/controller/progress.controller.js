@@ -1,9 +1,15 @@
 const Progress = require('../model/progress.model');
 
 exports.saveProgress = async (req, res) => {
-    const { userId, videoId, watchedIntervals, currentTime } = req.body; 
-
     try {
+        const { userId, videoId, watchedIntervals, currentTime } = req.body;
+        console.log(`Saving progress via REST API: userId=${userId}, videoId=${videoId}`);
+        
+        // Handle missing parameters
+        if (!userId || !videoId || !watchedIntervals) {
+            return res.status(400).json({ message: 'Missing required parameters' });
+        }
+
         let progress = await Progress.findOne({ userId, videoId });
 
         if (progress) {
@@ -20,10 +26,10 @@ exports.saveProgress = async (req, res) => {
         }
 
         await progress.save();
-        res.status(200).json({ message: 'Progress saved successfully', progress });
+        res.status(200).json({ success: true, message: 'Progress saved successfully', progress });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error saving progress' });
+        console.error('Error in progress controller:', error);
+        res.status(500).json({ message: error.message });
     }
 }
 

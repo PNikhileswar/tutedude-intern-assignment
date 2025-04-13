@@ -4,6 +4,15 @@ let socket = null;
 let isConnecting = false;
 
 export const getSocket = (token) => {
+  // Only try to connect socket in development or if feature flag enabled
+  const enableSockets = process.env.REACT_APP_ENABLE_SOCKETS === 'true' || 
+                        process.env.NODE_ENV !== 'production';
+  
+  if (!enableSockets) {
+    console.log('Sockets disabled in this environment, using REST API');
+    return null;
+  }
+  
   if (socket && socket.connected) {
     return socket;
   }

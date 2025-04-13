@@ -9,9 +9,19 @@ export const saveProgress = async (userId, videoId, watchedIntervals) => {
   }
   
   try {
+    console.log(`Saving progress via API for video ${videoId}`);
     await axios.post(`${API_URL}/save`, { userId, videoId, watchedIntervals });
+    console.log('Progress saved successfully via REST API');
   } catch (error) {
     console.error('Error saving progress:', error);
+    // Try again with absolute URL if it might be a relative path issue
+    try {
+      const fullUrl = process.env.REACT_APP_API_BASE_URL + '/api/progress/save';
+      await axios.post(fullUrl, { userId, videoId, watchedIntervals });
+      console.log('Progress saved with fallback URL');
+    } catch (secondError) {
+      console.error('Complete progress saving failure:', secondError);
+    }
   }
 };
 

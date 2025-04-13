@@ -121,6 +121,21 @@ const VideoPlayer = () => {
     };
   }, []);
 
+  useEffect(() => {
+    // Skip if no user, no video, or if socket is connected
+    if (!currentUser?.id || !videoId || (socketRef.current && socketRef.current.connected)) return;
+    
+    // REST API fallback interval (only runs when socket is unavailable)
+    const saveInterval = setInterval(() => {
+      if (playedIntervals.length > 0) {
+        console.log('Socket unavailable, using REST API fallback for progress');
+        saveProgress(currentUser.id, videoId, playedIntervals);
+      }
+    }, 10000); // Save every 10 seconds
+    
+    return () => clearInterval(saveInterval);
+  }, [currentUser?.id, videoId, playedIntervals]);
+
   const mergeIntervals = (intervals) => {
     if (!intervals.length) return [];
 
