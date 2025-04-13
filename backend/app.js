@@ -11,6 +11,11 @@ const app = express();
 const server = http.createServer(app);
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 let io;
 if (process.env.NODE_ENV !== 'production') {
   // Only use socket.io in development environment
@@ -116,6 +121,17 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use((req, res, next) => {
+  const url = req.originalUrl;
+  if (url.includes(':') && !url.match(/:\w+/)) {
+    return res.status(400).json({ 
+      error: 'Invalid URL format', 
+      message: 'URL contains invalid parameter format'
+    });
+  }
+  next();
+});
+
 const progressRoutes = require('./routers/progress.routers');
 const authRoutes = require('./routers/auth.routers');
 const playlistRoutes = require('./routers/playlist.routers');
@@ -130,8 +146,8 @@ app.get('/',(req,res)=>{
     res.send('Hello World');
 });
 
-// Add this at the end of your routes, before mongoose.connect
-app.use('*', (req, res) => {
+// Replace your existing 404 handler with this
+app.use('/*', (req, res) => {
   res.status(404).json({ 
     error: 'Not Found',
     message: `Route ${req.originalUrl} not found`,
@@ -185,7 +201,17 @@ function calculateUniqueTime(intervals) {
   return totalTime;
 }
 
-// Replace the last lines with:
+// Add this just before module.exports = app;
+app.use((err, req, res, next) => {
+  console.error('Express error:', err);
+  res.status(500).json({
+    error: 'Server Error',
+    message: process.env.NODE_ENV === 'production' ? 
+      'An unexpected error occurred' : 
+      err.message
+  });
+});
+
 if (process.env.NODE_ENV !== 'production') {
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
