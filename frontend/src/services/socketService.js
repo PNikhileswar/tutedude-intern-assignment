@@ -22,9 +22,9 @@ export const getSocket = (token) => {
   try {
     socket = io(process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000', {
       auth: { token },
-      reconnection: false, 
-      timeout: 5000,
-      transports: ['polling'] 
+      reconnection: true, // Change to true for better reliability
+      timeout: 10000,     // Increase timeout
+      transports: ['polling', 'websocket'] // Support both transports
     });
     
     socket.on('connect', () => {

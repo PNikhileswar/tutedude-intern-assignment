@@ -110,7 +110,7 @@ if (process.env.NODE_ENV !== 'production') {
 const PORT = 5000;
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  origin: '*', // For development only - restrict this in production
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
@@ -130,6 +130,12 @@ app.use((req, res, next) => {
     });
   }
   next();
+});
+
+// Add this before your other routes
+app.get('/favicon.ico', (req, res) => {
+  // Return a 204 No Content status
+  res.status(204).end();
 });
 
 const progressRoutes = require('./routers/progress.routers');

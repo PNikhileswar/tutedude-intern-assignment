@@ -14,6 +14,8 @@ import VideoPlayer from './components/VideoPlayer';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+
 function App() {
   const [backendAvailable, setBackendAvailable] = useState(true);
 
@@ -21,7 +23,7 @@ function App() {
     // Check if backend is available
     const checkBackend = async () => {
       try {
-        await axios.get('http://localhost:5000/');
+        await axios.get(`${API_BASE_URL}/`);
         setBackendAvailable(true);
       } catch (error) {
         console.error('Backend not available:', error);
