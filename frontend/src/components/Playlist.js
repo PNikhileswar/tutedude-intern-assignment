@@ -27,7 +27,7 @@ const Playlist = () => {
         console.log(`Fetching playlists for ${languageSlug}`);
         
         const response = await axios.get(
-          `http://localhost:5000/api/playlists/language/${languageSlug}`
+          `${process.env.REACT_APP_API_BASE_URL}/api/playlists/language/${languageSlug}`
         );
         
         if (response.data?.playlists) {

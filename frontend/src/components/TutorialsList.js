@@ -11,7 +11,7 @@ const TutorialsList = () => {
   useEffect(() => {
     const fetchLanguages = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/playlists/languages');
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/playlists/languages`);
         setLanguages(response.data);
         setLoading(false);
       } catch (err) {

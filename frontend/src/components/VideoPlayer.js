@@ -188,7 +188,7 @@ const VideoPlayer = () => {
     const fetchVideo = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:5000/api/videos/${videoId}`);
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/videos/${videoId}`);
         setVideoData(response.data);
         
         // If user is logged in, fetch their progress but don't show resume dialog

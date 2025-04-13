@@ -52,7 +52,7 @@ const PlaylistVideos = () => {
       
       console.log(`Loading playlist ${playlistId}`);
       
-      const response = await axios.get(`http://localhost:5000/api/playlists/${playlistId}/videos`);
+      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/playlists/${playlistId}/videos`);
       setPlaylist(response.data);
       
       if (currentUser && response.data) {

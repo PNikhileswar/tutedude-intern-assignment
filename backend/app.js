@@ -110,7 +110,10 @@ if (process.env.NODE_ENV !== 'production') {
 const PORT = 5000;
 
 app.use(cors({
-  origin: '*', // For development only - restrict this in production
+  origin: [
+    'https://tutedude-intern-assignment-3p21-fe2c5m2km.vercel.app',
+    process.env.FRONTEND_URL || 'http://localhost:3000'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
