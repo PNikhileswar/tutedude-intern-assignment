@@ -20,7 +20,7 @@ export const getSocket = (token) => {
   }
   
   try {
-    socket = io('http://localhost:5000', {
+    socket = io(process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000', {
       auth: { token },
       reconnection: false, 
       timeout: 5000,
