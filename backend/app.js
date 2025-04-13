@@ -110,12 +110,20 @@ if (process.env.NODE_ENV !== 'production') {
 const PORT = 5000;
 
 app.use(cors({
-  origin: [
-    'https://tutedude-intern-assignment-3p21-fe2c5m2km.vercel.app',
-    process.env.FRONTEND_URL || 'http://localhost:3000'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
+  origin: function(origin, callback) {
+    // Allow any origin for development/testing
+    callback(null, true);
+    
+    // For production, use this instead:
+    // const allowedOrigins = [
+    //   'https://tutedude-intern-assignment-3p21-fxs1r9kyf.vercel.app',
+    //   process.env.FRONTEND_URL
+    // ];
+    // callback(null, allowedOrigins.includes(origin));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(bodyParser.json());
 
