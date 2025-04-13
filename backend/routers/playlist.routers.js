@@ -42,19 +42,39 @@ router.get('/language/:slug', async (req, res) => {
   try {
     const slug = req.params.slug;
     
-    const languageName = slug
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    console.log(`Processing request for slug: "${slug}"`);
     
-    const playlists = await Playlist.find({ language: new RegExp(languageName, 'i') })
+    let languageName;
+    if (slug === 'html-css') {
+      languageName = 'HTML/CSS';
+      console.log(`HTML/CSS request detected, looking for: "${languageName}"`);
+    } else {
+      languageName = slug
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+    
+    console.log(`Finding playlists for language: "${languageName}"`);
+    
+    let query;
+    if (languageName === 'HTML/CSS') {
+      query = { language: languageName };
+    } else {
+      query = { language: new RegExp('^' + languageName + '$', 'i') };
+    }
+    
+    const playlists = await Playlist.find(query)
       .populate('videos');
+    
+    console.log(`Found ${playlists.length} playlists for ${languageName}`);
     
     res.json({
       language: { name: languageName, slug },
       playlists
     });
   } catch (error) {
+    console.error('Error fetching playlists:', error);
     res.status(500).json({ message: error.message });
   }
 });

@@ -1,15 +1,22 @@
 const Progress = require('../model/progress.model');
 
 exports.saveProgress = async (req, res) => {
-    const { userId, videoId, watchedIntervals } = req.body; 
+    const { userId, videoId, watchedIntervals, currentTime } = req.body; 
 
     try {
         let progress = await Progress.findOne({ userId, videoId });
 
         if (progress) {
             progress.watchedIntervals = mergeIntervals(progress.watchedIntervals || [], watchedIntervals);
+            progress.lastPosition = currentTime || progress.lastPosition;
         } else {
-            progress = new Progress({ userId, videoId, watchedIntervals });
+            progress = new Progress({ 
+                userId, 
+                videoId, 
+                watchedIntervals,
+                lastPosition: currentTime || 0,
+                percent: 0
+            });
         }
 
         await progress.save();

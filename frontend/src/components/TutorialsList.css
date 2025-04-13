@@ -1,52 +1,187 @@
+.tutorials-main {
+  padding-bottom: 60px;
+}
+
+.tutorials-hero {
+  padding: 60px 20px;
+  text-align: center;
+  background-image: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-color) 100%);
+  color: white;
+  margin-bottom: 40px;
+  border-radius: 0 0 30px 30px;
+  box-shadow: 0 10px 25px rgba(99,102,241,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.tutorials-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255,255,255,0.1),
+    rgba(255,255,255,0.1) 1px,
+    transparent 1px,
+    transparent 10px
+  );
+  animation: move 20s linear infinite;
+  z-index: 1;
+}
+
+.tutorials-hero h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+  letter-spacing: -0.5px;
+  position: relative;
+  z-index: 2;
+}
+
+.tutorials-hero p {
+  font-size: 1.2rem;
+  max-width: 600px;
+  margin: 0 auto;
+  opacity: 0.9;
+  position: relative;
+  z-index: 2;
+}
+
 .tutorials-container {
-  padding: 20px;
+  padding: 0 20px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-.tutorials-container h2 {
-  margin-bottom: 30px;
-  color: #333;
-  text-align: center;
-}
-
 .languages-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
 }
 
 .language-card {
   background-color: white;
-  border-radius: 8px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
   text-decoration: none;
   color: inherit;
-  padding: 20px;
-  text-align: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--gray-200);
+  padding: 30px;
 }
 
 .language-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  transform: translateY(-8px);
+  box-shadow: 0 15px 30px rgba(99,102,241,0.15);
+  border-color: var(--primary-light);
 }
 
 .language-icon {
-  font-size: 48px;
-  margin-bottom: 15px;
+  font-size: 60px;
+  margin-bottom: 20px;
+  background-color: var(--gray-100);
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.language-card:hover .language-icon {
+  transform: scale(1.1);
+  background-color: var(--primary-light);
+}
+
+.language-info {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .language-card h3 {
-  margin: 0 0 10px;
-  color: #333;
+  margin: 0 0 8px 0;
+  font-size: 1.6rem;
+  color: var(--gray-800);
+  font-weight: 700;
 }
 
-.language-card p {
-  margin: 0;
-  color: #666;
-  font-size: 14px;
+.playlist-count {
+  color: var(--primary-color);
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: inline-block;
+  margin-bottom: 15px;
+  border-radius: 20px;
+  padding: 5px 10px;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.language-description {
+  color: var(--gray-600);
+  line-height: 1.6;
+  margin-bottom: 25px;
+  flex-grow: 1;
+}
+
+.card-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 15px;
+  border-top: 1px dashed var(--gray-200);
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.arrow {
+  font-size: 1.2rem;
+  transition: transform 0.3s;
+}
+
+.language-card:hover .arrow {
+  transform: translateX(5px);
+}
+
+@keyframes move {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(50%, 50%);
+  }
+}
+
+@media (max-width: 768px) {
+  .tutorials-hero h1 {
+    font-size: 2rem;
+  }
+  
+  .tutorials-hero p {
+    font-size: 1rem;
+  }
+  
+  .language-card {
+    padding: 20px;
+  }
+  
+  .language-icon {
+    font-size: 40px;
+    width: 70px;
+    height: 70px;
+  }
 }
 
 .loading, .error {

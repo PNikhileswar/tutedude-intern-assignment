@@ -27,16 +27,33 @@ const TutorialsList = () => {
   if (error) return <div className="error">{error}</div>;
 
   return (
-    <div className="tutorials-container">
-      <h2>Coding Tutorials</h2>
-      <div className="languages-grid">
-        {languages.map(language => (
-          <Link to={`/tutorials/${language.slug}`} key={language.slug} className="language-card">
-            <div className="language-icon">{language.icon}</div>
-            <h3>{language.name}</h3>
-            <p>{language.playlistCount} playlists</p>
-          </Link>
-        ))}
+    <div className="tutorials-main">
+      <div className="tutorials-hero">
+        <h1>Master Coding with Interactive Tutorials</h1>
+        <p>Choose a programming language to get started on your learning journey</p>
+      </div>
+      
+      <div className="tutorials-container">
+        <div className="languages-grid">
+          {languages.map(language => (
+            <Link to={`/tutorials/${language.slug}`} key={language.slug} className="language-card">
+              <div className="language-icon">{language.icon}</div>
+              <div className="language-info">
+                <h3>{language.name}</h3>
+                <span className="playlist-count">{language.playlistCount} courses</span>
+                <p className="language-description">
+                  {language.name === "JavaScript" && "Build dynamic web applications and modern UIs"}
+                  {language.name === "Python" && "Create apps, analyze data, and build AI solutions"}
+                  {language.name === "HTML/CSS" && "Design beautiful responsive websites"}
+                </p>
+                <div className="card-action">
+                  <span>Explore courses</span>
+                  <span className="arrow">→</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   );

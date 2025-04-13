@@ -6,7 +6,7 @@ const authMiddleware = require('../middleware/auth.middleware');
 
 router.get('/:videoId', async (req, res) => {
   try {
-    const video = await Video.findById(req.params.videoId);
+    const video = await Video.findById(req.params.videoId).populate('playlistId');
     
     if (!video) {
       return res.status(404).json({ message: 'Video not found' });

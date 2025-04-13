@@ -7,9 +7,13 @@
   --dark-bg: #111827;
   --light-bg: #f9fafb;
   --gray-800: #1f2937;
+  --gray-700: #374151;
   --gray-600: #4b5563;
+  --gray-500: #6b7280;
   --gray-400: #9ca3af;
+  --gray-300: #d1d5db;
   --gray-200: #e5e7eb;
+  --gray-100: #f3f4f6;
 }
 
 body {
@@ -137,4 +141,42 @@ footer {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+.backend-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #f9fafb;
+  padding: 2rem;
+  text-align: center;
+}
+
+.backend-error h1 {
+  color: #ef4444;
+  margin-bottom: 1rem;
+}
+
+.backend-error p {
+  margin-bottom: 2rem;
+  max-width: 500px;
+  color: #4b5563;
+}
+
+.backend-error button {
+  background-color: #6366f1;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.backend-error button:hover {
+  background-color: #4f46e5;
+  transform: translateY(-2px);
 }

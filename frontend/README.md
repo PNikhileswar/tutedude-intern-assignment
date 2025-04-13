@@ -1,70 +1,93 @@
-# Getting Started with Create React App
+TuteDude Learning Platform
+Project Overview
+TuteDude is an interactive video learning platform for programming tutorials. The application lets users browse courses organized by programming language, watch tutorial videos, and automatically track their learning progress. Built with the MERN stack (MongoDB, Express, React, Node.js), this platform provides a seamless educational experience with features like progress tracking, video resume capabilities, and a responsive user interface.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Key Features
+📚 Organized Course Structure
+Language Categories: Browse courses by programming language (JavaScript, Python, HTML/CSS)
+Course Playlists: Related videos grouped into cohesive learning paths
+Intuitive Navigation: Clean UI for browsing and selecting courses
+🎬 Advanced Video Player
+Custom Controls: User-friendly video player with intuitive controls
+Resume Functionality: Automatically continue videos from where you left off
+Progress Tracking: Visual indicators showing watched segments of each video
+Next Video Navigation: Easy access to the next tutorial in a playlist
+📊 Progress Tracking
+Real-time Updates: Progress saved as you watch videos
+Course Completion: Track overall course completion percentage
+Video-level Progress: Individual progress for each tutorial video
+Progress Statistics: Time watched, time remaining, and completed videos
+👤 User Authentication
+Secure Login/Signup: Encrypted user authentication
+JWT Authentication: Token-based authentication for API requests
+Protected Content: Course content access for registered users
+Persistent Sessions: Remember user progress across sessions
+🔄 Real-time Connectivity
+WebSocket Integration: Real-time progress updates via Socket.io
+Connection Status: Visual indicators for online/offline status
+Automatic Sync: Progress synced across devices when logged in
+Getting Started
+Prerequisites
+Node.js v14 or higher
+MongoDB
+npm or yarn
 
-## Available Scripts
+Installation
+Clone the repository
+git clone https://github.com/yourusername/tutedude-intern-assignment.git
+cd tutedude-intern-assignment
 
-In the project directory, you can run:
+Set up the backend
+cd backend
+npm install
 
-### `npm start`
+Set up the frontend
+cd ../frontend
+npm install
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Seed the database
+cd ../backend
+npm run seed
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Start the backend server
+npm run dev
 
-### `npm test`
+Start the frontend application
+cd ../frontend
+npm start
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Access the application
+Open your browser and navigate to http://localhost:3000
 
-### `npm run build`
+Usage Guide
+Register or Login
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Create a new account or sign in with existing credentials
+Browse Courses
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Navigate through different programming languages and available courses
+Select a Course
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Click on a course to view its contents and videos
+See course progress and completion status
+Watch Videos
 
-### `npm run eject`
+Click on a video to start watching
+Your progress is automatically saved as you watch
+Use the video controls for playback options
+Navigate to the next video using the "Next" button
+Track Your Progress
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+View your overall and video-specific progress in real-time
+Resume watching from where you left off automatically
+Technologies Used
+Frontend: React, React Router, Axios, Socket.io-client
+Backend: Node.js, Express, MongoDB, Mongoose, Socket.io
+Authentication: JSON Web Tokens (JWT), bcrypt
+Video Player: React Player
+License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Acknowledgments
+Tutorial videos sourced from YouTube educational channels
+Built as part of TuteDude internship assignment

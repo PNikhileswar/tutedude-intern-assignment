@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useContext, useCallback } from 'react';
 import ReactPlayer from 'react-player';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { getProgress } from '../services/api';
 import axios from 'axios';
@@ -9,6 +9,7 @@ import './VideoPlayer.css';
 
 const VideoPlayer = () => {
   const { videoId } = useParams();
+  const navigate = useNavigate();
   const { currentUser } = useContext(AuthContext);
   const [videoData, setVideoData] = useState(null);
   const [playedIntervals, setPlayedIntervals] = useState([]);
@@ -20,17 +21,23 @@ const VideoPlayer = () => {
   const [seeking, setSeeking] = useState(false);
   const [hoverPosition, setHoverPosition] = useState(null);
   const [currentTime, setCurrentTime] = useState(0);
-  const [playbackRate, setPlaybackRate] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isStableConnection, setIsStableConnection] = useState(false);
+  const [lastPosition, setLastPosition] = useState(0);
+  const [hasInitialSeeked, setHasInitialSeeked] = useState(false);
+  const [videoFinished, setVideoFinished] = useState(false);
+  const [nextVideo, setNextVideo] = useState(null);
+  const [progressLoading, setProgressLoading] = useState(true);
   const playerRef = useRef(null);
   const progressBarRef = useRef(null);
   const lastIntervalRef = useRef(null);
   const socketRef = useRef(null);
   const currentTimeRef = useRef(0);
   const durationRef = useRef(100);
+  const lastPositionRef = useRef(0);
+  const progressUpdateTimeoutRef = useRef(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -148,13 +155,56 @@ const VideoPlayer = () => {
     return Math.min(100, (totalUniqueSeconds / videoDuration) * 100);
   }, []);
 
+  const fetchNextVideo = useCallback(async () => {
+    if (!videoData || !videoData.playlistId) return;
+    
+    try {
+      const response = await axios.get(`http://localhost:5000/api/playlists/${videoData.playlistId}/videos`);
+      
+      if (response.data && response.data.videos && response.data.videos.length > 0) {
+        const currentIndex = response.data.videos.findIndex(v => v._id === videoId);
+        if (currentIndex !== -1 && currentIndex < response.data.videos.length - 1) {
+          setNextVideo(response.data.videos[currentIndex + 1]);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching next video:', err);
+    }
+  }, [videoId, videoData]);
+
+  useEffect(() => {
+    if (videoData) {
+      fetchNextVideo();
+    }
+  }, [videoData, fetchNextVideo]);
+
+  useEffect(() => {
+    if (nextVideo) {
+      console.log("Next video data loaded:", nextVideo.title);
+    }
+  }, [nextVideo]);
+
   useEffect(() => {
     const fetchVideo = async () => {
       try {
         setLoading(true);
         const response = await axios.get(`http://localhost:5000/api/videos/${videoId}`);
         setVideoData(response.data);
-        console.log("Video data loaded:", response.data);
+        
+        // If user is logged in, fetch their progress but don't show resume dialog
+        if (currentUser?.id) {
+          try {
+            const progressData = await getProgress(currentUser.id, videoId);
+            if (progressData && progressData.lastPosition > 5) {
+              setLastPosition(progressData.lastPosition);
+              lastPositionRef.current = progressData.lastPosition;
+              // Don't set showResumePrompt, just set the position
+            }
+          } catch (err) {
+            console.error("Error fetching video progress position:", err);
+          }
+        }
+        
         setLoading(false);
       } catch (error) {
         console.error("Error fetching video:", error);
@@ -165,21 +215,44 @@ const VideoPlayer = () => {
 
     if (videoId) {
       fetchVideo();
+      setVideoFinished(false);
     }
-  }, [videoId]);
+    
+    setHasInitialSeeked(false);
+  }, [videoId, currentUser?.id]);
 
   useEffect(() => {
     if (currentUser?.id && videoId) {
-      getProgress(currentUser.id, videoId).then(data => {
-        if (data && data.watchedIntervals) {
-          setPlayedIntervals(data.watchedIntervals);
-          setProgress(calculateProgress(data.watchedIntervals, duration));
-        }
-      }).catch(err => {
-        console.error("Error fetching progress:", err);
-      });
+      setProgressLoading(true);
+      
+      // Clear any existing timeout
+      if (progressUpdateTimeoutRef.current) {
+        clearTimeout(progressUpdateTimeoutRef.current);
+      }
+      
+      // Set a 2-second delay before fetching progress
+      progressUpdateTimeoutRef.current = setTimeout(() => {
+        getProgress(currentUser.id, videoId).then(data => {
+          if (data && data.watchedIntervals) {
+            setPlayedIntervals(data.watchedIntervals);
+            const calculatedProgress = calculateProgress(data.watchedIntervals, duration);
+            setProgress(calculatedProgress);
+            console.log("Updated progress after delay:", calculatedProgress);
+          }
+          setProgressLoading(false);
+        }).catch(err => {
+          console.error("Error fetching progress:", err);
+          setProgressLoading(false);
+        });
+      }, 2000);
     }
-  }, [currentUser, videoId, duration, calculateProgress]);
+    
+    return () => {
+      if (progressUpdateTimeoutRef.current) {
+        clearTimeout(progressUpdateTimeoutRef.current);
+      }
+    };
+  }, [currentUser?.id, videoId, duration, calculateProgress]);
 
   useEffect(() => {
     if (!videoId || !currentUser?.id || !socketRef.current) {
@@ -226,7 +299,19 @@ const VideoPlayer = () => {
       setPlayedIntervals(prev => [...prev, newInterval]);
     }
 
-    setProgress(calculateProgress([...playedIntervals, lastIntervalRef.current], duration));
+    const calculatedProgress = calculateProgress([...playedIntervals, lastIntervalRef.current], duration);
+    setProgress(calculatedProgress);
+    
+    // Mark video as finished when progress is over 95% or we're at the end
+    if (calculatedProgress > 95 || (currentTime > 0 && Math.abs(currentTime - duration) < 2)) {
+      setVideoFinished(true);
+    }
+
+    // Force show next video when we're very close to the end
+    if (duration > 0 && currentTime > 0 && duration - currentTime < 0.5) {
+      setVideoFinished(true);
+    }
+    
     setLoaded(state.loaded * 100);
   };
 
@@ -330,13 +415,45 @@ const VideoPlayer = () => {
     }
   };
 
-  const handlePlaybackRateChange = (e) => {
-    const rate = parseFloat(e.target.value);
-    setPlaybackRate(rate);
-  };
-
   const handleMute = () => {
     setVolume(volume === 0 ? 0.8 : 0);
+  };
+
+  const handleReady = () => {
+    if (lastPosition > 5 && !hasInitialSeeked && playerRef.current) {
+      console.log(`Auto-resuming video at ${formatTime(lastPosition)}`);
+      playerRef.current.seekTo(lastPosition);
+      setHasInitialSeeked(true);
+      
+      // Auto-play after seeking
+      setTimeout(() => {
+        setIsPlaying(true);
+      }, 300);
+    }
+  };
+
+  const handleStartFromBeginning = () => {
+    if (playerRef.current) {
+      playerRef.current.seekTo(0);
+      setIsPlaying(true); // Start playing from the beginning
+    }
+  };
+
+  const handleDismissResumePrompt = () => {
+    // Start playback after the prompt is dismissed
+    setIsPlaying(true);
+  };
+
+  const handleVideoEnded = () => {
+    console.log("Video ended - showing next video prompt");
+    setVideoFinished(true);
+    setIsPlaying(false);
+  };
+
+  const handleNextVideo = () => {
+    if (nextVideo) {
+      navigate(`/video/${nextVideo._id}`);
+    }
   };
 
   return (
@@ -356,14 +473,37 @@ const VideoPlayer = () => {
               height="100%"
               playing={isPlaying}
               volume={volume}
-              playbackRate={playbackRate}
               onProgress={handleProgress}
               onDuration={handleDuration}
               onPlay={handlePlay}
               onPause={handlePause}
+              onReady={handleReady}
+              onEnded={handleVideoEnded}
+              fallback={<div className="video-fallback">Video cannot be played</div>}
               onError={(e) => {
                 console.error("Video playback error:", e);
-                setError("Error playing video. Please try another tutorial.");
+                // Try multiple fallback options
+                setError("We're having trouble playing this video. Trying alternatives...");
+                
+                // Try different YouTube embedding options sequentially
+                const tryAlternatives = async () => {
+                  // First try nocookie domain
+                  try {
+                    const url1 = `https://www.youtube-nocookie.com/embed/${videoData.youtubeId}?autoplay=1&mute=0&playsinline=1`;
+                    playerRef.current.getInternalPlayer().src = url1;
+                    await new Promise(r => setTimeout(r, 3000));
+                    
+                    if (!playerRef.current.getInternalPlayer().getPlayerState) {
+                      // Second try with different parameters
+                      const url2 = `https://www.youtube.com/embed/${videoData.youtubeId}?autoplay=0&rel=0`;
+                      playerRef.current.getInternalPlayer().src = url2;
+                    }
+                  } catch (err) {
+                    setError(`This video is currently unavailable. Please try a different video or check back later.`);
+                  }
+                };
+                
+                tryAlternatives();
               }}
               progressInterval={500}
               controls={false}
@@ -372,13 +512,38 @@ const VideoPlayer = () => {
                   playerVars: {
                     disablekb: 0,
                     modestbranding: 1,
+                    origin: window.location.origin,
                     rel: 0,
-                    fs: 0
+                    fs: 0,
+                    iv_load_policy: 3,
+                    autoplay: 0
+                  },
+                  embedOptions: {
+                    host: 'https://www.youtube-nocookie.com'
                   }
                 }
               }}
               className="react-player"
             />
+            
+            {hasInitialSeeked && lastPosition > 5 && (
+              <div className="auto-resume-indicator">
+                Resumed from {formatTime(lastPosition)}
+              </div>
+            )}
+            
+            {/* Show next video button when video is finished */}
+            {videoFinished && nextVideo && (
+              <div className="next-video-overlay">
+                <div className="next-video-content">
+                  <h3>Video Complete!</h3>
+                  <p>Next: {nextVideo.title}</p>
+                  <button onClick={handleNextVideo} className="next-video-button">
+                    Watch Next Video <span className="next-arrow">→</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           
           <div className="controls-container">
@@ -431,31 +596,44 @@ const VideoPlayer = () => {
                     }}
                   />
                 </div>
+
+                {hasInitialSeeked && lastPosition > 5 && (
+                  <button 
+                    className="control-button secondary restart-button" 
+                    onClick={() => playerRef.current.seekTo(0)}
+                    title="Restart video"
+                  >
+                    ⟲ Restart
+                  </button>
+                )}
               </div>
               
               <div className="secondary-controls">
-                <div className="playback-rate">
-                  <select value={playbackRate} onChange={handlePlaybackRateChange}>
-                    <option value={0.5}>0.5x</option>
-                    <option value={0.75}>0.75x</option>
-                    <option value={1}>1x</option>
-                    <option value={1.25}>1.25x</option>
-                    <option value={1.5}>1.5x</option>
-                    <option value={2}>2x</option>
-                  </select>
-                </div>
-                
                 <div className="progress-percentage">
-                  <div className="progress-circle" style={{ '--progress': `${progress}%` }}>
+                  <div className="progress-circle" style={{ '--progress': `${progressLoading ? 0 : progress}%` }}>
                     <div className="progress-circle-fill"></div>
-                    <span>{Math.round(progress)}%</span>
+                    <span>{progressLoading ? "..." : Math.round(progress) + "%"}</span>
                   </div>
-                  <p>Watched {isSaving && <span className="saving-indicator">• Saving</span>}</p>
+                  <p>
+                    {progressLoading ? "Loading..." : "Watched"}
+                    {!progressLoading && isSaving && <span className="saving-indicator">• Saving</span>}
+                  </p>
                 </div>
                 
                 <button className="control-button secondary" onClick={handleFullscreen}>
                   <span role="img" aria-label="fullscreen">⛶</span>
                 </button>
+                
+                {/* Always show next video button */}
+                {nextVideo && (
+                  <button 
+                    className="control-button next-button" 
+                    onClick={handleNextVideo}
+                    title={nextVideo ? `Next: ${nextVideo.title}` : ''}
+                  >
+                    Next <span className="next-icon">→</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -466,6 +644,35 @@ const VideoPlayer = () => {
               <span className="status-disconnected">● Offline</span>
             }
           </div>
+
+          {/* Add video info panel below the video player component */}
+          {videoData && (
+            <div className="video-info-panel">
+              <div className="video-info-content">
+                <h3>{videoData.title}</h3>
+                <p>{videoData.description}</p>
+                
+                {nextVideo && (
+                  <div className="next-up-preview">
+                    <h4>Next Up</h4>
+                    <div className="next-video-preview" onClick={handleNextVideo}>
+                      <div className="preview-thumbnail">
+                        <img 
+                          src={`https://img.youtube.com/vi/${nextVideo.youtubeId}/mqdefault.jpg`}
+                          alt={nextVideo.title}
+                        />
+                        <div className="play-icon">▶</div>
+                      </div>
+                      <div className="preview-info">
+                        <strong>{nextVideo.title}</strong>
+                        <span>{nextVideo.description}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </>
       ) : (
         <div className="error-message">Video not found</div>
