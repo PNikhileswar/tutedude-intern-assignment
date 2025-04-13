@@ -129,7 +129,14 @@ const VideoPlayer = () => {
     const saveInterval = setInterval(() => {
       if (playedIntervals.length > 0) {
         console.log('Socket unavailable, using REST API fallback for progress');
-        saveProgress(currentUser.id, videoId, playedIntervals);
+        // Include currentTime and duration like the socket version does
+        saveProgress(
+          currentUser.id, 
+          videoId, 
+          playedIntervals,
+          currentTimeRef.current, // Add current time
+          durationRef.current     // Add duration
+        );
       }
     }, 10000); // Save every 10 seconds
     
