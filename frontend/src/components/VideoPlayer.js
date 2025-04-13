@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useContext, useCallback } from 'rea
 import ReactPlayer from 'react-player';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { getProgress } from '../services/api';
+import { getProgress, saveProgress } from '../services/api';
 import axios from 'axios';
 import { getSocket, closeSocket } from '../services/socketService';
 import './VideoPlayer.css';
