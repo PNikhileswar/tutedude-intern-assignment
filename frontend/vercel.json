@@ -1,6 +1,10 @@
 {
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/.*", "dest": "/index.html" }
-  ]
-}
+    "version": 2,
+    "outputDirectory": "build",
+    "buildCommand": "npm run build",
+    "framework": "create-react-app",
+    "routes": [
+      { "handle": "filesystem" },
+      { "src": "/(.*)", "dest": "/index.html" }
+    ]
+  }
