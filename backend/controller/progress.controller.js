@@ -5,7 +5,6 @@ exports.saveProgress = async (req, res) => {
         const { userId, videoId, watchedIntervals, currentTime, duration } = req.body;
         console.log(`Saving progress via REST API: userId=${userId}, videoId=${videoId}`);
         
-        // Handle missing parameters
         if (!userId || !videoId || !watchedIntervals) {
             return res.status(400).json({ message: 'Missing required parameters' });
         }
@@ -16,7 +15,6 @@ exports.saveProgress = async (req, res) => {
             progress.watchedIntervals = mergeIntervals(progress.watchedIntervals || [], watchedIntervals);
             progress.lastPosition = currentTime || progress.lastPosition;
             
-            // Calculate percentage - THIS WAS MISSING
             const totalUniqueSeconds = calculateUniqueTime(progress.watchedIntervals);
             const videoDuration = duration || 100;
             progress.percent = Math.min(100, (totalUniqueSeconds / videoDuration) * 100);
@@ -29,7 +27,6 @@ exports.saveProgress = async (req, res) => {
                 percent: 0
             });
             
-            // Calculate initial percentage for new entries too
             if (watchedIntervals.length > 0 && duration) {
                 const totalUniqueSeconds = calculateUniqueTime(watchedIntervals);
                 progress.percent = Math.min(100, (totalUniqueSeconds / duration) * 100);
@@ -83,7 +80,6 @@ function mergeIntervals(existing, newIntervals) {
     return merged;
 }
 
-// Add this helper function to calculate total unique time from intervals
 function calculateUniqueTime(intervals) {
     if (!intervals || !intervals.length) return 0;
     

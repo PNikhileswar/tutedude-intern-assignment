@@ -14,13 +14,12 @@ export const saveProgress = async (userId, videoId, watchedIntervals, currentTim
       userId, 
       videoId, 
       watchedIntervals,
-      currentTime,    // Include current time
-      duration        // Include duration for percentage calculation
+      currentTime,    
+      duration     
     });
     console.log('Progress saved successfully via REST API');
   } catch (error) {
     console.error('Error saving progress:', error);
-    // Try again with absolute URL if it might be a relative path issue
     try {
       const fullUrl = process.env.REACT_APP_API_BASE_URL + '/api/progress/save';
       await axios.post(fullUrl, { 

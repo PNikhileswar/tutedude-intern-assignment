@@ -18,20 +18,19 @@ app.use((req, res, next) => {
 
 let io;
 
-// Unconditional Socket.io setup
+
 io = socketIo(server, {
   cors: {
-    origin: "*", // For production, you may want to restrict this
+    origin: "*", 
     methods: ["GET", "POST"]
   },
   pingTimeout: 60000, 
   pingInterval: 25000,
-  transports: ['polling'], // Polling is more reliable for serverless
-  allowUpgrades: false, // Prevent upgrade to websocket which fails in serverless
-  path: '/api/socketio' // Add a specific path for Socket.io
+  transports: ['polling'], 
+  allowUpgrades: false, 
+  path: '/api/socketio' 
 });
 
-// Keep your socket auth and connection handlers
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) {
@@ -110,15 +109,7 @@ const PORT = 5000;
 
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow any origin for development/testing
     callback(null, true);
-    
-    // For production, use this instead:
-    // const allowedOrigins = [
-    //   'https://tutedude-intern-assignment-3p21-fxs1r9kyf.vercel.app',
-    //   process.env.FRONTEND_URL
-    // ];
-    // callback(null, allowedOrigins.includes(origin));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
@@ -142,9 +133,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Add this before your other routes
 app.get('/favicon.ico', (req, res) => {
-  // Return a 204 No Content status
   res.status(204).end();
 });
 
@@ -158,16 +147,12 @@ app.use('/api/auth', authRoutes);
 app.use('/api/playlists', playlistRoutes);
 app.use('/api/videos', videoRoutes);
 
-// Add this route to verify progress collection and get diagnostic info
 app.get('/api/debug/progress', async (req, res) => {
   try {
-    // Test database connection
     const dbState = mongoose.connection.readyState;
     
-    // Check if collection exists and get sample count
     const progressCount = await Progress.countDocuments();
     
-    // Get last 5 progress records
     const recentProgress = await Progress.find().limit(5).sort({_id: -1});
     
     res.json({
@@ -190,7 +175,6 @@ app.get('/',(req,res)=>{
     res.send('Hello World');
 });
 
-// Replace your existing 404 handler with this
 app.use('/*', (req, res) => {
   res.status(404).json({ 
     error: 'Not Found',
@@ -245,7 +229,6 @@ function calculateUniqueTime(intervals) {
   return totalTime;
 }
 
-// Add this just before module.exports = app;
 app.use((err, req, res, next) => {
   console.error('Express error:', err);
   res.status(500).json({
@@ -256,15 +239,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-// For local development
 if (process.env.NODE_ENV !== 'production') {
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
 } else {
-  // For Vercel, export both app and server
   module.exports = { app, server };
 }
 
-// Export for serverless environment
 module.exports = app;
