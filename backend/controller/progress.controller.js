@@ -2,7 +2,7 @@ const Progress = require('../model/progress.model');
 
 exports.saveProgress = async (req, res) => {
     try {
-        const { userId, videoId, watchedIntervals, currentTime } = req.body;
+        const { userId, videoId, watchedIntervals, currentTime, duration } = req.body;
         console.log(`Saving progress via REST API: userId=${userId}, videoId=${videoId}`);
         
         // Handle missing parameters
@@ -15,6 +15,11 @@ exports.saveProgress = async (req, res) => {
         if (progress) {
             progress.watchedIntervals = mergeIntervals(progress.watchedIntervals || [], watchedIntervals);
             progress.lastPosition = currentTime || progress.lastPosition;
+            
+            // Calculate percentage - THIS WAS MISSING
+            const totalUniqueSeconds = calculateUniqueTime(progress.watchedIntervals);
+            const videoDuration = duration || 100;
+            progress.percent = Math.min(100, (totalUniqueSeconds / videoDuration) * 100);
         } else {
             progress = new Progress({ 
                 userId, 
@@ -23,6 +28,12 @@ exports.saveProgress = async (req, res) => {
                 lastPosition: currentTime || 0,
                 percent: 0
             });
+            
+            // Calculate initial percentage for new entries too
+            if (watchedIntervals.length > 0 && duration) {
+                const totalUniqueSeconds = calculateUniqueTime(watchedIntervals);
+                progress.percent = Math.min(100, (totalUniqueSeconds / duration) * 100);
+            }
         }
 
         await progress.save();
@@ -70,4 +81,13 @@ function mergeIntervals(existing, newIntervals) {
     merged.push(current);
 
     return merged;
+}
+
+// Add this helper function to calculate total unique time from intervals
+function calculateUniqueTime(intervals) {
+    if (!intervals || !intervals.length) return 0;
+    
+    return intervals.reduce((total, interval) => {
+        return total + (interval.end - interval.start);
+    }, 0);
 }

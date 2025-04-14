@@ -204,7 +204,7 @@ const VideoPlayer = () => {
     if (!videoData || !videoData.playlistId) return;
     
     try {
-      const response = await axios.get(`http://localhost:5000/api/playlists/${videoData.playlistId}/videos`);
+      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/playlists/${videoData.playlistId}/videos`);
       
       if (response.data && response.data.videos && response.data.videos.length > 0) {
         const currentIndex = response.data.videos.findIndex(v => v._id === videoId);

@@ -37,7 +37,7 @@ const Playlist = () => {
           if (currentUser && response.data.playlists.length > 0) {
             const progressPromises = response.data.playlists.map(playlist => 
               axios.get(
-                `http://localhost:5000/api/playlists/${playlist._id}/progress`,
+                `${process.env.REACT_APP_API_BASE_URL}/api/playlists/${playlist._id}/progress`,
                 { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }}
               ).catch(err => {
                 console.error(`Error fetching progress for playlist ${playlist._id}:`, err);

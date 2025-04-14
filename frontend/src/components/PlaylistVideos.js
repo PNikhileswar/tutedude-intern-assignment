@@ -58,7 +58,7 @@ const PlaylistVideos = () => {
       if (currentUser && response.data) {
         try {
           const progressRes = await axios.get(
-            `http://localhost:5000/api/playlists/${playlistId}/progress`,
+            `${process.env.REACT_APP_API_BASE_URL}/api/playlists/${playlistId}/progress`,
             { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }}
           );
           
