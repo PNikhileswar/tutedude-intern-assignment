@@ -4,15 +4,9 @@ let socket = null;
 let isConnecting = false;
 
 export const getSocket = (token) => {
-  // Only try to connect socket in development or if feature flag enabled
-  const enableSockets = process.env.REACT_APP_ENABLE_SOCKETS === 'true' || 
-                        process.env.NODE_ENV !== 'production';
-  
-  if (!enableSockets) {
-    console.log('Sockets disabled in this environment, using REST API');
-    return null;
-  }
-  
+  // Force enable sockets even in production
+  const enableSockets = true; // Override the environment check
+
   if (socket && socket.connected) {
     return socket;
   }
@@ -23,17 +17,18 @@ export const getSocket = (token) => {
   
   isConnecting = true;
   
-  if (socket) {
-    socket.disconnect();
-    socket = null;
-  }
-  
   try {
-    socket = io(process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000', {
+    // Update connection settings for Vercel environment
+    socket = io(process.env.REACT_APP_API_BASE_URL, {
+      path: '/api/socketio', // Match the path we set on the server
       auth: { token },
-      reconnection: true, // Change to true for better reliability
-      timeout: 10000,     // Increase timeout
-      transports: ['polling', 'websocket'] // Support both transports
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
+      transports: ['polling'], // Stick with polling for Vercel
+      forceNew: true
     });
     
     socket.on('connect', () => {

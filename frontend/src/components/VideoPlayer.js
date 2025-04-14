@@ -138,10 +138,33 @@ const VideoPlayer = () => {
           durationRef.current     // Add duration
         );
       }
-    }, 10000); // Save every 10 seconds
+    }, 1000); // Save every 1 seconds
     
     return () => clearInterval(saveInterval);
   }, [currentUser?.id, videoId, playedIntervals]);
+
+  useEffect(() => {
+    if (!currentUser?.id || !videoId) return;
+    
+    // Either socket isn't initialized or we've tried connecting but failed
+    if (!socketRef.current || !isStableConnection) {
+      console.log('Using REST API fallback for progress tracking');
+      
+      const saveInterval = setInterval(() => {
+        if (playedIntervals.length > 0 && currentTimeRef.current > 0) {
+          saveProgress(
+            currentUser.id, 
+            videoId, 
+            playedIntervals,
+            currentTimeRef.current,
+            durationRef.current
+          );
+        }
+      }, 10000);
+      
+      return () => clearInterval(saveInterval);
+    }
+  }, [currentUser?.id, videoId, playedIntervals, isStableConnection]);
 
   const mergeIntervals = (intervals) => {
     if (!intervals.length) return [];

@@ -17,95 +17,94 @@ app.use((req, res, next) => {
 });
 
 let io;
-if (process.env.NODE_ENV !== 'production') {
-  // Only use socket.io in development environment
-  io = socketIo(server, {
-    cors: {
-      origin: process.env.FRONTEND_URL || "http://localhost:3000",
-      methods: ["GET", "POST"]
-    },
-    pingTimeout: 30000, 
-    pingInterval: 10000, 
-    transports: ['websocket', 'polling'],
-    allowUpgrades: true
+
+// Unconditional Socket.io setup
+io = socketIo(server, {
+  cors: {
+    origin: "*", // For production, you may want to restrict this
+    methods: ["GET", "POST"]
+  },
+  pingTimeout: 60000, 
+  pingInterval: 25000,
+  transports: ['polling'], // Polling is more reliable for serverless
+  allowUpgrades: false, // Prevent upgrade to websocket which fails in serverless
+  path: '/api/socketio' // Add a specific path for Socket.io
+});
+
+// Keep your socket auth and connection handlers
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (!token) {
+    return next(new Error("Authentication error"));
+  }
+  
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    socket.userId = decoded.id;
+    next();
+  } catch (err) {
+    next(new Error("Authentication error"));
+  }
+});
+
+io.on('connection', (socket) => {
+  console.log(`User connected: ${socket.userId}`);
+  
+  socket.on('progress_update', async (data) => {
+    try {
+      const { videoId, watchedIntervals, currentTime } = data;
+      
+      if (!socket.userId || !videoId) {
+        console.log('Missing userId or videoId in progress update');
+        return;
+      }
+      
+      if (!Array.isArray(watchedIntervals)) {
+        console.log(`Invalid watchedIntervals format for video ${videoId}, received:`, watchedIntervals);
+        socket.emit('progress_error', { error: 'Invalid watchedIntervals format' });
+        return;
+      }
+      
+      console.log(`Received progress update for video ${videoId} at position ${currentTime}`);
+      
+      let progress = await Progress.findOne({ userId: socket.userId, videoId });
+      
+      if (progress) {
+        progress.watchedIntervals = mergeIntervals(progress.watchedIntervals || [], watchedIntervals);
+        progress.lastPosition = currentTime;
+        
+        const totalUniqueSeconds = calculateUniqueTime(progress.watchedIntervals);
+        const videoDuration = data.duration || 100;
+        progress.percent = Math.min(100, (totalUniqueSeconds / videoDuration) * 100);
+      } else {
+        progress = new Progress({ 
+          userId: socket.userId, 
+          videoId, 
+          watchedIntervals,
+          lastPosition: currentTime,
+          percent: 0
+        });
+      }
+      
+      await progress.save();
+
+      socket.emit('progress_saved', { 
+        videoId, 
+        percent: progress.percent,
+        timestamp: new Date().toISOString(),
+        totalWatchedSeconds: calculateUniqueTime(progress.watchedIntervals)
+      });
+      
+    } catch (error) {
+      console.error('Error saving progress via socket:', error);
+      socket.emit('progress_error', { error: error.message });
+    }
   });
   
-  io.use((socket, next) => {
-    const token = socket.handshake.auth.token;
-    if (!token) {
-      return next(new Error("Authentication error"));
-    }
-    
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET);
-      socket.userId = decoded.id;
-      next();
-    } catch (err) {
-      next(new Error("Authentication error"));
-    }
+  socket.on('disconnect', () => {
+    console.log(`User disconnected: ${socket.userId}`);
   });
-
-  io.on('connection', (socket) => {
-    console.log(`User connected: ${socket.userId}`);
-    
-    socket.on('progress_update', async (data) => {
-      try {
-        const { videoId, watchedIntervals, currentTime } = data;
-        
-        if (!socket.userId || !videoId) {
-          console.log('Missing userId or videoId in progress update');
-          return;
-        }
-        
-        if (!Array.isArray(watchedIntervals)) {
-          console.log(`Invalid watchedIntervals format for video ${videoId}, received:`, watchedIntervals);
-          socket.emit('progress_error', { error: 'Invalid watchedIntervals format' });
-          return;
-        }
-        
-        console.log(`Received progress update for video ${videoId} at position ${currentTime}`);
-        
-        let progress = await Progress.findOne({ userId: socket.userId, videoId });
-        
-        if (progress) {
-          progress.watchedIntervals = mergeIntervals(progress.watchedIntervals || [], watchedIntervals);
-          progress.lastPosition = currentTime;
-          
-          const totalUniqueSeconds = calculateUniqueTime(progress.watchedIntervals);
-          const videoDuration = data.duration || 100;
-          progress.percent = Math.min(100, (totalUniqueSeconds / videoDuration) * 100);
-        } else {
-          progress = new Progress({ 
-            userId: socket.userId, 
-            videoId, 
-            watchedIntervals,
-            lastPosition: currentTime,
-            percent: 0
-          });
-        }
-        
-        await progress.save();
-
-        socket.emit('progress_saved', { 
-          videoId, 
-          percent: progress.percent,
-          timestamp: new Date().toISOString(),
-          totalWatchedSeconds: calculateUniqueTime(progress.watchedIntervals)
-        });
-        
-      } catch (error) {
-        console.error('Error saving progress via socket:', error);
-        socket.emit('progress_error', { error: error.message });
-      }
-    });
-    
-    socket.on('disconnect', () => {
-      console.log(`User disconnected: ${socket.userId}`);
-    });
-  });
-} else {
-  console.log("Socket.io disabled in production serverless environment");
-}
+});
 
 const PORT = 5000;
 
@@ -257,10 +256,14 @@ app.use((err, req, res, next) => {
   });
 });
 
+// For local development
 if (process.env.NODE_ENV !== 'production') {
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
+} else {
+  // For Vercel, export both app and server
+  module.exports = { app, server };
 }
 
 // Export for serverless environment
